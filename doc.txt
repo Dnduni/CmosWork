@@ -1,8 +1,8 @@
-File principale: herewego.cpp
+File principale: esposizione.cpp videostream.cpp
 Dipendenze: ASICameralib2.so ASICameralib2.so.1.37 ASICameralib2.a ASICamera2.h
 Il programma e' stato testato su sistema ubuntu, le librerie fanno riferimento a sistema linux x64.
 
-Argomenti di compilazione: g++ Herewego.cpp -o herewego.x -L libASICamera2.a libASICamera2.so
+Argomenti di compilazione: g++ file.cpp -o file.x -L libASICamera2.a libASICamera2.so
 Affinche' l'eseguibile sia avviabile e' necessario aggiungere le librerie dinamiche all'include di siste,a. Cio' puo' essere fatto copiando le librerie in /usr/local/lib e digitando da terminale ldconfig /usr/local/lib come superuser.
 
 Il programma genera un file txt per ogni acquisizione nella cartella output.
