@@ -79,7 +79,9 @@ int main(){
 				}
 				else{
 					for (i = 0; i < Ncontrols; i++){
-					std::cout << "Variable Number: \t" << i << " \t Variable: \t" << ControlCaps[i].Name << " \t Value: \t \t" << ControlCaps[i].DefaultValue << std::endl;
+					if(ControlCaps[i].IsWritable){
+						std::cout << "Variable Number: \t" << i << " \t Variable: \t" << ControlCaps[i].Name << " \t Value: \t \t" << ControlCaps[i].DefaultValue << std::endl;
+					}
 					}
 					break;
 				}
@@ -122,12 +124,12 @@ int main(){
 			ASI_BOOL isTrue;
 			//Checks if there were errors setting the value
 			ASIGetControlValue(info.CameraID, ControlCaps[i].ControlType, &check, &isTrue);
-			if(check == value && isTrue == ASI_FALSE){
+			if(check == value && isTrue == ASI_FALSE && except == ASI_SUCCESS){
 				std::cout << "Value set successfully" << std::endl;
 			}
 			else{
 				std::cout << "Value was not set successfully, check errors while typing" << std::endl;
-
+				std::cout << "Error: \t" << except << std::endl; 
 			}
 
 			std::cout << "Would you like to set another variable? (0/1)" << std::endl; //Ask again
@@ -169,7 +171,7 @@ int main(){
 		int raise_error = (NewX*NewY)%1024; //Error handling
 		isin = 0;
 		if (raise_error!=0){
-			std::cout << "Warning: resolution must be integer multiple of 1024" << std::endl; //Checks if resolution is supported by the camera
+			std::cout << "Warning:  resolution (Width*Height) must be integer multiple of 1024" << std::endl; //Checks if resolution is supported by the camera
 			isin = 1;
 		}
 		ASISetROIFormat(info.CameraID, NewX, NewY, NativeBin, NativeType); //Sets new resolution
@@ -248,6 +250,8 @@ long int buffer_size = 0; //init buffer size
 
 if(flag_res){
 	buffer_size =NewX*NewY;
+	NativeResX = NewX;
+	NativeResY = NewY;
 }
 
 else{	//defines buffer size depending on resolution 
@@ -281,7 +285,7 @@ for(i = 0; i < shutters; i++){
 	for(j = 0; j < buffer_size ; j++){
 		stream << (int)image[j];
 		stream << ' ';
-		if((j+1)%NativeResX == 0 && j > 1){		//Write to file txt according to resolution set
+		if((j+1)%NativeResX == 0){		//Write to file txt according to resolution set
 			stream << std::endl;
 		}
 
