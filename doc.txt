@@ -14,5 +14,7 @@ Dal programma e' possibile cambiare le impostazioni della fotocamera, il binning
 
 La filesize di output per una acquisizione a massima risoluzione va da 9Mb a 27Mb.
 
-
 Per compilare il programma e' necessario che nella stessa cartella siano presenti il file header e le librerie
+
+Esposizione.cpp : Ogni frame viene acquisito dopo un periodo di esposizione definito dall'utente.
+videostream.cpp : Ogni frame acquisito e' il primo frame disponibile dato dalla fotocamera senza wait time.

@@ -299,10 +299,11 @@ for(i = 0; i < shutters; i++){
 		if((j+1)%NativeResX == 0){		//Write to file txt according to resolution set
 			stream << std::endl;
 		}
-
+	
 	}
+	std::cout << int((i+1)*100/shutters) << "% \t" << "done" << std::endl;
 	stream.close();	//Release Stream
-
+	
 }
 	
 ASICloseCamera(info.CameraID); //Release camera
