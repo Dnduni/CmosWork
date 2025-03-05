@@ -5,6 +5,7 @@
 #include <string>
 	using std::ofstream;
 #include <limits>
+#include <vector>
 
 
 #define wait_time 500 //Minimum time in ms between consecutive acquisitions
@@ -246,7 +247,7 @@ long int buffer_size = 0;
 
 
 if(flag_res){
-	buffer_size = NewX*NewY;
+	buffer_size =NewX*NewY;
 }
 
 else{
@@ -254,6 +255,7 @@ else{
 	buffer_size = NativeResX*NativeResY;
 }
 std::cout << buffer_size;
+std::cout << std::endl;
 
 int shutters; 
 std::cout << "Select number of acquisitions" << std::endl;
@@ -269,18 +271,26 @@ ASIStartVideoCapture(info.CameraID);
 
 
 for(i = 0; i < shutters; i++){
-	unsigned char  image;
-	ASIGetVideoData(info.CameraID, &image, buffer_size, wait_time);
+	unsigned char * image = new unsigned char[buffer_size]();
+	ASIGetVideoData(info.CameraID, image, buffer_size, wait_time);
 	std::stringstream ss;
 	ss << "./output/image" << i << ".txt";
 	std::string s = ss.str();
-	std::cout << s;
-	stream.open(s, std::fstream::app);
+	stream.open(s, std::fstream::out);
 	if(!stream){
 		std::cout << "Cannot open output file" << std::endl;
 		}
-	stream << image;
+	int j;
+	for(j = 0; j < buffer_size ; j++){
+		stream << (int)image[j];
+		stream << ' ';
+		if((j+1)%NativeResX == 0 && j > 1){
+			stream << std::endl;
+		}
+
+	}
 	stream.close();
+
 }
 	
 

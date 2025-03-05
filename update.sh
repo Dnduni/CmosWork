@@ -1,4 +1,3 @@
 git add .
-a = 'Update' += date
-git commit -m a
+git commit -m 'Update'
 git push origin master
