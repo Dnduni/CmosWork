@@ -254,7 +254,7 @@ else{	//defines buffer size depending on resolution
 
 	buffer_size = NativeResX*NativeResY;
 }
-std::cout << buffer_size;
+std::cout <<"Buffer Size \t" buffer_size;
 std::cout << std::endl;
 
 int shutters; 
