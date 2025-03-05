@@ -79,15 +79,17 @@ int main(){
 				}
 				else{
 					for (i = 0; i < Ncontrols; i++){
-					if(ControlCaps[i].IsWritable){
-						std::cout << "Variable Number: \t" << i << " \t Variable: \t" << ControlCaps[i].Name << " \t Value: \t \t" << ControlCaps[i].DefaultValue << std::endl;
-					}
-					}
+						if(ControlCaps[i].IsWritable){
+							long DefaultValue;
+							ASI_BOOL DefBool;
+							ASIGetControlValue(info.CameraID,ControlCaps[i].ControlType, &DefaultValue, &DefBool);
+							std::cout << "Variable Number: \t" << i << " \t Variable: \t" << ControlCaps[i].Name << " \t Value: \t \t" << DefaultValue << "\t Auto: \t " << DefBool << std::endl;
+						}
 					break;
 				}
 			};
-
-
+		
+		}
 
 	//Step 5 Set control Values
 	//Ask user if variable is to be changed

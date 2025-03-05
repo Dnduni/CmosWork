@@ -5,8 +5,8 @@
 #include <string>
 	using std::ofstream;
 #include <limits>
-#include <vector>
-
+#include <thread>
+#include <chrono>
 
 #define wait_time 500 //Minimum time in ms between consecutive acquisitions
 
@@ -80,7 +80,10 @@ int main(){
 				else{
 					for (i = 0; i < Ncontrols; i++){
 					if(ControlCaps[i].IsWritable){
-						std::cout << "Variable Number: \t" << i << " \t Variable: \t" << ControlCaps[i].Name << " \t Value: \t \t" << ControlCaps[i].DefaultValue << std::endl;
+						long DefaultValue;
+						ASI_BOOL DefBool;
+						ASIGetControlValue(info.CameraID,ControlCaps[i].ControlType, &DefaultValue, &DefBool);
+						std::cout << "Variable Number: \t" << i << " \t Variable: \t" << ControlCaps[i].Name << " \t Value: \t \t" << DefaultValue << "\t Auto: \t " << DefBool << std::endl;
 					}
 					}
 					break;
@@ -274,16 +277,30 @@ std::cin >> exp_time;
 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 std::cout << std::endl;
 
-ASISetControlValue(info.CameraID, ASI_EXPOSURE, exp_time , ASI_FALSE);
+except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, exp_time , ASI_FALSE);
+
 
 
 for(i = 0; i < shutters; i++){
 	unsigned char * image = new unsigned char[buffer_size](); //Declare image buffer
+	isin = 1;
 	
-	ASIStartExposure(info.CameraID, ASI_FALSE);
-	ASIStopExposure(info.CameraID);
+	ASIStartExposure(info.CameraID, ASI_FALSE); //Start exposure
+	ASI_EXPOSURE_STATUS status;
+	auto start = std::chrono::steady_clock::now();
+	while(isin){
+		auto wtis = std::chrono::steady_clock::now() - start;
+		int dur = std::chrono::duration_cast<std::chrono::milliseconds>(wtis).count();
 
-	ASIGetDataAfterExp(info.CameraID, image, buffer_size);
+
+		ASIGetExpStatus(info.CameraID, &status); //Run timer and get exposure status
+		
+		if(dur > exp_time){isin = 0;}
+	}
+
+	if(status){ASIGetDataAfterExp(info.CameraID, image, buffer_size); //If exposure status is not error save image
+		std::cout << "Success" << std::endl;
+	}
 
 	std::stringstream ss;
 	ss << "./output/image" << i << ".txt";
