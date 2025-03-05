@@ -1,0 +1,18 @@
+File principale: herewego.cpp
+Dipendenze: ASICameralib2.so ASICameralib2.so.1.37 ASICameralib2.a ASICamera2.h
+Il programma e' stato testato su sistema ubuntu, le librerie fanno riferimento a sistema linux x64.
+
+Argomenti di compilazione: g++ Herewego.cpp -o herewego.x -L libASICamera2.a libASICamera2.so
+Affinche' l'eseguibile sia avviabile e' necessario aggiungere le librerie dinamiche all'include di siste,a. Cio' puo' essere fatto copiando le librerie in /usr/local/lib e digitando da terminale ldconfig /usr/local/lib come superuser.
+
+Il programma genera un file txt per ogni acquisizione nella cartella output.
+Tale file contiene i valori numerici dei bit (0-255) in una matrice N*M dove N ed M corrispondono alla width ed height scelte durante l'acquisizione (default 3008*3008)
+
+Le risoluzioni supportate sono tali che N*M % 1024 = 0.
+
+Dal programma e' possibile cambiare le impostazioni della fotocamera, il binning ed il trigger dei pixel e variare la risoluzione.
+
+La filesize di output per una acquisizione a massima risoluzione va da 9Mb a 27Mb.
+
+
+Per compilare il programma e' necessario che nella stessa cartella siano presenti il file header e le librerie
