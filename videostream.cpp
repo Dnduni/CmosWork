@@ -104,7 +104,7 @@ int main(){
 
 
 	while(response){
-			std::cout << "Select Variable from 0 to \t" << Ncontrols-1 << std::endl; //Select variable to be changed
+			std::cout << "Select Variable: Gain 0, Exposure 1, Bias 2" << std::endl; //Select variable to be changed
 
 			int variable;
 			long value;
@@ -117,22 +117,55 @@ int main(){
 			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			std::cout << std::endl;
 
-
-
-			//This is where the magic happens
-			except = ASISetControlValue(info.CameraID, ControlCaps[i].ControlType, value, AutoAdjust); //this sets the value of the variable 
-
 			long check;
 			ASI_BOOL isTrue;
-			//Checks if there were errors setting the value
-			ASIGetControlValue(info.CameraID, ControlCaps[i].ControlType, &check, &isTrue);
-			if(check == value && isTrue == ASI_FALSE && except == ASI_SUCCESS){
-				std::cout << "Value set successfully" << std::endl;
-			}
-			else{
-				std::cout << "Value was not set successfully, check errors while typing" << std::endl;
-				std::cout << "Error: \t" << except << std::endl; 
-			}
+
+
+			switch(variable){
+
+				case 0:
+					except = ASISetControlValue(info.CameraID, ASI_GAIN, value, AutoAdjust);
+
+					//Checks if there were errors setting the value
+					ASIGetControlValue(info.CameraID, ASI_GAIN, &check, &isTrue);
+					if(check == value && isTrue == ASI_FALSE && except == ASI_SUCCESS){
+						std::cout << "Value set successfully" << std::endl;
+					}
+					else{
+						std::cout << "Value was not set successfully, check errors while typing" << std::endl;
+						std::cout << "Error: \t" << except << std::endl; 
+					}
+					break;
+				
+				case 1:
+					except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, value, AutoAdjust);
+
+					//Checks if there were errors setting the value
+					ASIGetControlValue(info.CameraID, ASI_EXPOSURE, &check, &isTrue);
+					if(check == value && isTrue == ASI_FALSE && except == ASI_SUCCESS){
+						std::cout << "Value set successfully" << std::endl;
+					}
+					else{
+						std::cout << "Value was not set successfully, check errors while typing" << std::endl;
+						std::cout << "Error: \t" << except << std::endl; 
+					}
+					break;
+
+				case 2:
+					except = ASISetControlValue(info.CameraID, ASI_GAMMA, value, AutoAdjust);
+
+					//Checks if there were errors setting the value
+					ASIGetControlValue(info.CameraID, ASI_GAMMA, &check, &isTrue);
+					if(check == value && isTrue == ASI_FALSE && except == ASI_SUCCESS){
+					std::cout << "Value set successfully" << std::endl;
+					}
+					else{
+						std::cout << "Value was not set successfully, check errors while typing" << std::endl;
+						std::cout << "Error: \t" << except << std::endl; 
+					}
+					break;
+				}
+
 
 			std::cout << "Would you like to set another variable? (0/1)" << std::endl; //Ask again
 			std::cin >> response;
