@@ -100,11 +100,11 @@ int main(){
 
 
 	while(response){
-			std::cout << "Select Variable from 0 to \t" << Ncontrols-1 << std::endl;
+			std::cout << "Select Variable from 0 to \t" << Ncontrols-1 << std::endl; //Select variable to be changed
 
 			int variable;
 			long value;
-			ASI_BOOL AutoAdjust = ASI_FALSE ;
+			ASI_BOOL AutoAdjust = ASI_FALSE ; //Removes automatic setting for that variable
 			std::cin >> variable;
 			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			std::cout << std::endl;
@@ -116,7 +116,7 @@ int main(){
 
 
 			//This is where the magic happens
-			except = ASISetControlValue(info.CameraID, ControlCaps[i].ControlType, value, AutoAdjust);
+			except = ASISetControlValue(info.CameraID, ControlCaps[i].ControlType, value, AutoAdjust); //this sets the value of the variable 
 
 			long check;
 			ASI_BOOL isTrue;
@@ -130,7 +130,7 @@ int main(){
 
 			}
 
-			std::cout << "Would you like to set another variable? (0/1)" << std::endl;
+			std::cout << "Would you like to set another variable? (0/1)" << std::endl; //Ask again
 			std::cin >> response;
 			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			std::cout << std::endl;
@@ -142,15 +142,15 @@ int main(){
 
 	int NativeResX = 0;
 	int NativeResY = 0;
-	ASI_IMG_TYPE NativeType;
+	ASI_IMG_TYPE NativeType; //init resolution variables
 	int NativeBin;
 	int flag_res = 0;
 	int flag_bin = 0;
-	ASIGetROIFormat(info.CameraID, &NativeResX, &NativeResY, &NativeBin, &NativeType);
+	ASIGetROIFormat(info.CameraID, &NativeResX, &NativeResY, &NativeBin, &NativeType); //Get status of resolution
 	
-	std::cout << "Resolution: \t" << NativeResX << "*" << NativeResY << "\t Binning: \t" << NativeBin << "\t Image Type: \t" << NativeType << std::endl;
+	std::cout << "Resolution: \t" << NativeResX << "*" << NativeResY << "\t Binning: \t" << NativeBin << "\t Image Type: \t" << NativeType << std::endl; //print current values
 
-	std::cout << "Would you like to change resolution? (0/1)" << std::endl;
+	std::cout << "Would you like to change resolution? (0/1)" << std::endl; //Ask user to change resolution
 	std::cin >> response;
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	std::cout << std::endl;
@@ -169,16 +169,16 @@ int main(){
 		int raise_error = (NewX*NewY)%1024; //Error handling
 		isin = 0;
 		if (raise_error!=0){
-			std::cout << "Warning: resolution must be integer multiple of 1024" << std::endl;
+			std::cout << "Warning: resolution must be integer multiple of 1024" << std::endl; //Checks if resolution is supported by the camera
 			isin = 1;
 		}
-		ASISetROIFormat(info.CameraID, NewX, NewY, NativeBin, NativeType);
+		ASISetROIFormat(info.CameraID, NewX, NewY, NativeBin, NativeType); //Sets new resolution
 		flag_res = 1; //flags changes to resolution
 		}
 	}
 	//Set binning
 	response = 0;
-	std::cout << "Would you like to change binning? (0/1)" << std::endl;
+	std::cout << "Would you like to change binning? (0/1)" << std::endl; //Asks to change binning
 	std::cin >> response;
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	std::cout << std::endl;
@@ -202,7 +202,7 @@ int main(){
 	ASI_CAMERA_MODE DefaultCameraMode;
 	ASIGetCameraMode(info.CameraID, &DefaultCameraMode);
 	std::cout << "Camera Mode: \t" << DefaultCameraMode << std::endl;
-	std::cout << "Change Camera Mode? (0/1)" << std::endl;
+	std::cout << "Change Camera Mode? (0/1)" << std::endl; //Asks to change camera mode (pixel trigger treshold)
 	std::cin >> response;
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	std::cout << std::endl;
@@ -217,7 +217,7 @@ int main(){
 		switch(selection){
 			case 0:
 				CameraMode = ASI_MODE_NORMAL;
-				ASISetCameraMode(info.CameraID, CameraMode);
+				ASISetCameraMode(info.CameraID, CameraMode); //Lists all available camera modes
 			case 1:
 				CameraMode = ASI_MODE_TRIG_SOFT_EDGE;
 				ASISetCameraMode(info.CameraID, CameraMode);
@@ -241,7 +241,7 @@ int main(){
 	}
 
 //Capture image FINALLY
-long int buffer_size = 0;
+long int buffer_size = 0; //init buffer size
 
 
 
@@ -250,7 +250,7 @@ if(flag_res){
 	buffer_size =NewX*NewY;
 }
 
-else{
+else{	//defines buffer size depending on resolution 
 
 	buffer_size = NativeResX*NativeResY;
 }
@@ -258,25 +258,22 @@ std::cout << buffer_size;
 std::cout << std::endl;
 
 int shutters; 
-std::cout << "Select number of acquisitions" << std::endl;
+std::cout << "Select number of acquisitions" << std::endl; //Asks for number of photos to be snapped
 std::cin >> shutters;
 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 std::cout << "Starting Video Capture" << std::endl;
 int j;
 
-ASIStartVideoCapture(info.CameraID);	
-//unsigned char image;
-
-//ASIGetVideoData(info.CameraID, &image, buffer_size, wait_time);
+ASIStartVideoCapture(info.CameraID);	//Initialise Video Capture mode
 
 
 for(i = 0; i < shutters; i++){
-	unsigned char * image = new unsigned char[buffer_size]();
-	ASIGetVideoData(info.CameraID, image, buffer_size, wait_time);
+	unsigned char * image = new unsigned char[buffer_size](); //Declare image buffer
+	ASIGetVideoData(info.CameraID, image, buffer_size, wait_time); //Get video data
 	std::stringstream ss;
 	ss << "./output/image" << i << ".txt";
 	std::string s = ss.str();
-	stream.open(s, std::fstream::out);
+	stream.open(s, std::fstream::out);		
 	if(!stream){
 		std::cout << "Cannot open output file" << std::endl;
 		}
@@ -284,16 +281,16 @@ for(i = 0; i < shutters; i++){
 	for(j = 0; j < buffer_size ; j++){
 		stream << (int)image[j];
 		stream << ' ';
-		if((j+1)%NativeResX == 0 && j > 1){
+		if((j+1)%NativeResX == 0 && j > 1){		//Write to file txt according to resolution set
 			stream << std::endl;
 		}
 
 	}
-	stream.close();
+	stream.close();	//Release Stream
 
 }
 	
-
+ASICloseCamera(info.CameraID); //Release camera
 
 
 
