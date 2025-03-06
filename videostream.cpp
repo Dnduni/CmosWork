@@ -182,7 +182,6 @@ int main(){
 	ASI_IMG_TYPE NativeType; //init resolution variables
 	int NativeBin;
 	int flag_res = 0;
-	int flag_bin = 0;
 	ASIGetROIFormat(info.CameraID, &NativeResX, &NativeResY, &NativeBin, &NativeType); //Get status of resolution
 	
 	std::cout << "Resolution: \t" << NativeResX << "*" << NativeResY << "\t Binning: \t" << NativeBin << "\t Image Type: \t" << NativeType << std::endl; //print current values
@@ -226,11 +225,9 @@ int main(){
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		if(flag_res == 1){
 			ASISetROIFormat(info.CameraID, NewX, NewY, NewBin, NativeType);
-			flag_bin = 1; //flags changes to bin number
 		}
 		else{
 			ASISetROIFormat(info.CameraID, NativeResX, NativeResY, NewBin, NativeType);
-			flag_bin = 1;
 		}
 	}
 
@@ -330,7 +327,7 @@ for(i = 0; i < shutters; i++){
 }
 	
 ASICloseCamera(info.CameraID); //Release camera
-
+delete(image);
 
 
 

@@ -184,7 +184,6 @@ int main(){
 	ASI_IMG_TYPE NativeType; //init resolution variables
 	int NativeBin;
 	int flag_res = 0;
-	int flag_bin = 0;
 	ASIGetROIFormat(info.CameraID, &NativeResX, &NativeResY, &NativeBin, &NativeType); //Get status of resolution
 	
 	std::cout << "Resolution: \t" << NativeResX << "*" << NativeResY << "\t Binning: \t" << NativeBin << "\t Image Type: \t" << NativeType << std::endl; //print current values
@@ -228,11 +227,9 @@ int main(){
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		if(flag_res == 1){
 			ASISetROIFormat(info.CameraID, NewX, NewY, NewBin, NativeType);
-			flag_bin = 1; //flags changes to bin number
 		}
 		else{
 			ASISetROIFormat(info.CameraID, NativeResX, NativeResY, NewBin, NativeType);
-			flag_bin = 1;
 		}
 	}
 
@@ -247,7 +244,7 @@ int main(){
 	std::cout << std::endl;
 	if(response){
 
-		ASI_CAMERA_MODE CameraMode;
+		ASI_CAMERA_MODE CameraMode; //Ask for camera mode selection
 		int selection;
 		std::cout << "Available Camera Modes:" << "\t Normal (default) 0" << "\t Soft Edge 1" << "\t" << "\t Rise Edge 2" << "\t Fall Edge 3" << "\t Soft Level 3" << "\t High Level 4" << "\t Low Level 5" << std::endl;
 		std::cout << "Select a number from above" << std::endl;
@@ -303,15 +300,19 @@ std::cout << "Select number of acquisitions" << std::endl; //Asks for number of 
 std::cin >> shutters;
 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 std::cout << "Starting Video Capture" << std::endl;
-int j;
 
 int exp_time;
-std::cout << "Set exposure time" << std::endl;
+std::cout << "Set exposure time" << std::endl; //Ask for exposure time
 std::cin >> exp_time;
 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 std::cout << std::endl;
 
-except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, exp_time , ASI_FALSE);
+except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, exp_time , ASI_FALSE); //Set exposure time to the camera (redundant but could be needed)
+
+
+
+
+
 
 
 
@@ -321,15 +322,15 @@ for(i = 0; i < shutters; i++){
 	
 	ASIStartExposure(info.CameraID, ASI_FALSE); //Start exposure
 	ASI_EXPOSURE_STATUS status;
-	auto start = std::chrono::steady_clock::now();
+	auto start = std::chrono::steady_clock::now(); //start timer
 	while(isin){
 		auto wtis = std::chrono::steady_clock::now() - start;
-		int dur = std::chrono::duration_cast<std::chrono::milliseconds>(wtis).count();
+		int dur = std::chrono::duration_cast<std::chrono::milliseconds>(wtis).count(); //calculate time elapsed
 
 
 		ASIGetExpStatus(info.CameraID, &status); //Run timer and get exposure status
 		
-		if(dur > exp_time){isin = 0;}
+		if(dur > exp_time){isin = 0;} //If time elapsed > exposure time kill acquisition
 	}
 
 	if(status){ASIGetDataAfterExp(info.CameraID, image, buffer_size); //If exposure status is not error save image
