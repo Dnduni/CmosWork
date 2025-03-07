@@ -246,7 +246,7 @@ int main(){
 
 		ASI_CAMERA_MODE CameraMode; //Ask for camera mode selection
 		int selection;
-		std::cout << "Available Camera Modes:" << "\t Normal (default) 0" << "\t Soft Edge 1" << "\t" << "\t Rise Edge 2" << "\t Fall Edge 3" << "\t Soft Level 3" << "\t High Level 4" << "\t Low Level 5" << std::endl;
+		std::cout << "Available Camera Modes:" << "\t Normal (default) 0" << "\t Soft Edge 1" << "\t" << "\t Rise Edge 2" << "\t Fall Edge 3" << "\t Soft Level 4" << "\t High Level 5" << "\t Low Level 6" << std::endl;
 		std::cout << "Select a number from above" << std::endl;
 		std::cin >> selection;
 		
