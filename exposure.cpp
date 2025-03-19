@@ -370,7 +370,12 @@ for(i = 0; i < shutters; i++){
 	}
 
 	std::stringstream ss;
-	ss << "./output/image" << i << ".txt";
+		if(i<10){ 
+			ss << "./output/image0000" << i << ".txt";
+		}
+		else{
+			ss << "./output/image000" << i << ".txt";
+		}
 	std::string s = ss.str();
 	stream.open(s, std::fstream::out);		
 	if(!stream){
