@@ -28,6 +28,7 @@
 
 int main(){
 	ofstream stream;
+	ofstream setstream;
 	//Step 1
 	int connected_cam = ASIGetNumOfConnectedCameras(); //Checks # of cameras connected
 	std::cout << "\n" << "connected:" << connected_cam << std::endl; //Prints number of connected cameras
@@ -275,6 +276,37 @@ int main(){
 		}
 
 	}
+
+
+//Write relevant settings to file
+
+std::stringstream set;
+set << "./output/acquisition_settings.txt";
+std::string se = set.str();
+setstream.open(se, std::fstream::out);		
+if(!setstream){
+	std::cout << "Cannot open output file" << std::endl;
+	}
+else{
+	for (i = 0; i < Ncontrols; i++){
+		if(ControlCaps[i].IsWritable){
+			long ActualValue;
+			ASI_BOOL DefBool;
+			ASIGetControlValue(info.CameraID,ControlCaps[i].ControlType, &ActualValue, &DefBool);
+			setstream << ControlCaps[i].Name << "\t" << ActualValue << std::endl;
+		}
+	}
+	
+
+}
+setstream.close();
+
+
+
+
+
+
+
 
 //Capture image FINALLY
 long int buffer_size = 0; //init buffer size
