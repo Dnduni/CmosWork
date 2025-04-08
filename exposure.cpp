@@ -374,13 +374,13 @@ for(i = 0; i < shutters; i++){
 		if(i<10){ 
 			ss << "./output/image0000" << i << ".txt";
 		}
-		else if(i>10 && i < 100){
+		else if(i>=10 && i < 100){
 			ss << "./output/image000" << i << ".txt";
 		}
-		else if(i > 100 && i < 1000){
+		else if(i >= 100 && i < 1000){
 			ss << "./output/image00" << i << ".txt";
 		}
-		else if(i > 1000 && i < 10000){
+		else if(i >= 1000 && i < 10000){
 			ss << "./output/image0" << i << ".txt";
 		}
 		else{
