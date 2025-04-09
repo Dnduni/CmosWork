@@ -34,12 +34,13 @@ for i in range(2000):
             plt.savefig("./eventi/event" + str(j) + "image" + str(i) + ".png")
             plt.close()
             with open("./eventi/events_image" + str(i) + ".txt", 'a') as eve:
-                eve.write("Event number:" + str(j) + "/n")
-                eve.write(str(element))
+                eve.write("Event number:" + str(j) + "\n")
+                eve.write(str(element) + "\n")
                 eve.close
             j += 1
         with open("./eventi/event_list.txt", 'a') as list:
-            list.write(str(centers))
+            for centro in centers:
+                list.write(str(centro[0]) + "\t" + str(centro[1]) + "\n")
         ev_num.append(j)
     means.append(np.mean(data.flatten()))
     print("\n Done:" + str(i*100/2000)+ "%")
