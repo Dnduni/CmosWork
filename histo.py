@@ -14,7 +14,7 @@ sum = sum[:,:3008]
 mean = sum / (i+1)
 mean = mean.flatten()
 print(mean.shape)
-plt.hist(mean, bins = 100)
+plt.hist(mean, bins = 20)
 plt.xlabel("Pixel Value")
 plt.ylabel("Counts")
 plt.savefig("Hist.png")
