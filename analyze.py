@@ -32,16 +32,14 @@ for i in range(2000):
         for element in events:
             plt.matshow(element)
             plt.savefig("./eventi/event" + str(j) + "image" + str(i) + ".png")
-            
-            with open('./eventi/event' + str(j) + "image" + str(i) + ".txt", 'a') as eve:
+            plt.close()
+            with open("./eventi/events_image" + str(i) + ".txt", 'a') as eve:
+                eve.write("Event number:" + str(j) + "/n")
                 eve.write(str(element))
                 eve.close
             j += 1
-        with open("./eventi/image" + str(i) + ".txt", 'a') as list:
-            list.write("Number of events:" + str(j)+ "\n")
-            list.write("Positions: \n")
+        with open("./eventi/event_list.txt", 'a') as list:
             list.write(str(centers))
-            list.close
         ev_num.append(j)
     means.append(np.mean(data.flatten()))
     print("\n Done:" + str(i*100/2000)+ "%")
