@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
+from tqdm import tqdm
 
 #Define relevant arrays and constants
 means = []
@@ -15,7 +16,7 @@ Path("./eventi/event_logs").mkdir(parents = True, exist_ok = True)
 
 
 #load files
-for i in range(2000):
+for i in tqdm(range(2000)):
     if i < 10:
         data = np.loadtxt("image0000" + str(i) + ".txt")
     elif i >= 10 and i < 100:
@@ -60,7 +61,6 @@ for i in range(2000):
                 list.write(str(centro[0]) + "\t" + str(centro[1]) + "\n")
         ev_num.append(j)
     means.append(np.mean(data.flatten()))
-    print("\n Done:" + str(i*100/2000)+ "%")
     #print out to file information on the detected events, threshold used and average pixel value
 with open('Acquisition_report.txt', 'a') as f:
     f.write("\n Number of detected events:" + str(np.sum(ev_num)))
