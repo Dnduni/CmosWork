@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-centers = np.loadtxt("1event_list.txt")
+centers = np.loadtxt("event_list.txt")
 
 x = []
 y = []

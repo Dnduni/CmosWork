@@ -280,27 +280,6 @@ int main(){
 
 //Write relevant settings to file
 
-std::stringstream set;
-set << "./output/acquisition_settings.txt";
-std::string se = set.str();
-setstream.open(se, std::fstream::out);		
-if(!setstream){
-	std::cout << "Cannot open output file" << std::endl;
-	}
-else{
-	for (i = 0; i < Ncontrols; i++){
-		if(ControlCaps[i].IsWritable){
-			long ActualValue;
-			ASI_BOOL DefBool;
-			ASIGetControlValue(info.CameraID,ControlCaps[i].ControlType, &ActualValue, &DefBool);
-			setstream << ControlCaps[i].Name << "\t" << ActualValue << std::endl;
-		}
-	}
-	
-
-}
-setstream.close();
-
 
 
 
@@ -341,6 +320,27 @@ std::cout << std::endl;
 
 except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, exp_time , ASI_FALSE); //Set exposure time to the camera (redundant but could be needed)
 
+
+std::stringstream set;
+set << "./output/acquisition_settings.txt";
+std::string se = set.str();
+setstream.open(se, std::fstream::out);		
+if(!setstream){
+	std::cout << "Cannot open output file" << std::endl;
+	}
+else{
+	for (i = 0; i < Ncontrols; i++){
+		if(ControlCaps[i].IsWritable){
+			long ActualValue;
+			ASI_BOOL DefBool;
+			ASIGetControlValue(info.CameraID,ControlCaps[i].ControlType, &ActualValue, &DefBool);
+			setstream << ControlCaps[i].Name << "\t" << ActualValue << std::endl;
+		}
+	}
+	
+
+}
+setstream.close();
 
 
 
