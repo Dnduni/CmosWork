@@ -1,8 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
+
+#Define relevant arrays and constants
 means = []
 ev_num = []
 treshold = 160
+
+#Set directories up for analysis to keep everything tidy
+
+Path("./eventi").mkdir(parents = True, exist_ok= True)
+Path("./eventi/images").mkdir(parents=True, exist_ok=True)
+Path("./eventi/event_logs").mkdir(parents = True, exist_ok = True)
+
+
+#load files
 for i in range(2000):
     if i < 10:
         data = np.loadtxt("image0000" + str(i) + ".txt")
@@ -13,8 +25,11 @@ for i in range(2000):
     elif i >= 1000:
         data = np.loadtxt("image0" + str(i) + ".txt")
     else:
-        print("Sono morto")
+        print("Sono morto") #funny
+
+    #Get seeds     
     centers = np.argwhere(data > treshold)
+    #if events are detected paint a 5x5 matrix around them
     if len(centers) > 0:
     
         events = []
@@ -29,21 +44,24 @@ for i in range(2000):
                 events.append(val)
 
         j = 0
+        #heatmap each element and add it to the detected events file for that image
         for element in events:
             plt.matshow(element)
-            plt.savefig("./eventi/event" + str(j) + "image" + str(i) + ".png")
+            plt.savefig("./eventi/images/event" + str(j) + "image" + str(i) + ".png")
             plt.close()
-            with open("./eventi/events_image" + str(i) + ".txt", 'a') as eve:
+            with open("./eventi/event_logs/events_image" + str(i) + ".txt", 'a') as eve:
                 eve.write("Event number:" + str(j) + "\n")
                 eve.write(str(element) + "\n")
                 eve.close
             j += 1
+        #write out to file the center of the event
         with open("./eventi/event_list.txt", 'a') as list:
             for centro in centers:
                 list.write(str(centro[0]) + "\t" + str(centro[1]) + "\n")
         ev_num.append(j)
     means.append(np.mean(data.flatten()))
     print("\n Done:" + str(i*100/2000)+ "%")
+    #print out to file information on the detected events, threshold used and average pixel value
 with open('Acquisition_report.txt', 'a') as f:
     f.write("\n Number of detected events:" + str(np.sum(ev_num)))
     f.write("\n Using threshold:" + str(treshold))
