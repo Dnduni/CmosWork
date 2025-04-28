@@ -355,13 +355,14 @@ for(i = 0; i < shutters; i++){
 	
 	ASIStartExposure(info.CameraID, ASI_FALSE); //Start exposure
 	ASI_EXPOSURE_STATUS status;
+	usleep(10000);
+    status = ASI_EXP_WORKING;
+	while(status == ASI_EXP_WORKING){
+		ASIGetExpStatus(info.CameraID, &status); //Run timer and get exposure status
+	}
 
-    sleep(exp_time);
-	ASIGetExpStatus(info.CameraID, &status); //Run timer and get exposure status
-		
 
-
-	if(status){ASIGetDataAfterExp(info.CameraID, image, buffer_size); //If exposure status is not error save image
+	if(status == ASI_EXP_SUCCESS){ASIGetDataAfterExp(info.CameraID, image, buffer_size); //If exposure status is not error save image
 	}
 
 	std::stringstream ss;
