@@ -346,14 +346,7 @@ setstream.close();
 std::stringstream ss;
 
 int threshold = 0;
-ss << "Active_pixels_tresh_" << threshold << ".txt";
 
-    
-std::string s = ss.str();
-stream.open(s, std::fstream::out);		
-if(!stream){
-    std::cout << "Cannot open output file" << std::endl;
-}
 
 
 
@@ -379,7 +372,14 @@ for(i = 0; i < shutters; i++){
 		std::cout << "Success" << std::endl;
 	}
 
+    ss << "Active_pixels_tresh_" << threshold << "_image_" << i << ".txt";
 
+    
+    std::string s = ss.str();
+    stream.open(s, std::fstream::out);		
+    if(!stream){
+        std::cout << "Cannot open output file" << std::endl;
+    }
 
 	int j = 0;
     int b = 0;
@@ -396,11 +396,12 @@ for(i = 0; i < shutters; i++){
 
         }
 	}
+    stream.close();	//Release Stream
 	std::cout << int((i+1)*100/shutters) << "% " << "done" << std::endl;
 
 	
 }
-stream.close();	//Release Stream
+
 ASICloseCamera(info.CameraID); //Release camera
 
 
