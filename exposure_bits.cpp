@@ -369,10 +369,9 @@ for(i = 0; i < shutters; i++){
 	}
 
 	if(status){ASIGetDataAfterExp(info.CameraID, image, buffer_size); //If exposure status is not error save image
-		std::cout << "Success" << std::endl;
 	}
 
-    ss << "Active_pixels_tresh_" << threshold << "_image_" << i << ".txt";
+    ss << "./output/active_pixels_tresh_" << threshold << "_image_" << i << ".txt";
 
     
     std::string s = ss.str();

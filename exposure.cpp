@@ -366,7 +366,6 @@ for(i = 0; i < shutters; i++){
 	}
 
 	if(status){ASIGetDataAfterExp(info.CameraID, image, buffer_size); //If exposure status is not error save image
-		std::cout << "Success" << std::endl;
 	}
 
 	std::stringstream ss;
