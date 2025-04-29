@@ -413,7 +413,7 @@ for(i = 0; i < shutters; i++){
 		}
 	int j;
 	for(j = 0; j < buffer_size ; j++){
-		stream << ((int)image[j] - offset);
+		stream << ((int)image[j] + offset);
 		stream << ' ';
 		if((j+1)%NativeResX == 0){		//Write to file txt according to resolution set
 			stream << std::endl;

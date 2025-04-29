@@ -405,7 +405,7 @@ for(i = 0; i < shutters; i++){
             b += 1;
         }
         if(((int)image[j] - offset) > threshold){
-            stream << ((int)image[j] - offset) << "\t" << ((j+1)%NativeResX) << "\t" << b << std::endl;
+            stream << ((int)image[j] + offset) << "\t" << ((j+1)%NativeResX) << "\t" << b << std::endl;
 
         }
 	}
