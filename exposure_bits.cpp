@@ -7,6 +7,7 @@
 #include <limits>
 #include <thread>
 #include <chrono>
+#include <unistd.h>
 
 #define wait_time 500 //Minimum time in ms between consecutive acquisitions
 
@@ -29,6 +30,9 @@
 int main(){
 	ofstream stream;
 	ofstream setstream;
+
+	int threshold = 100; //select pixel threshold
+	
 	//Step 1
 	int connected_cam = ASIGetNumOfConnectedCameras(); //Checks # of cameras connected
 	std::cout << "\n" << "connected:" << connected_cam << std::endl; //Prints number of connected cameras
@@ -142,7 +146,7 @@ int main(){
 					break;
 				
 				case 1:
-					except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, value, AutoAdjust);
+					except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, value*1000, AutoAdjust);
 
 					//Checks if there were errors setting the value
 					ASIGetControlValue(info.CameraID, ASI_EXPOSURE, &check, &isTrue);
@@ -280,9 +284,21 @@ int main(){
 
 //Write relevant settings to file
 
+response = 0;
+int offset = 0;
+std::cout << "Apply dark offset? (0/1)" << std::endl; //Asks to change camera mode (pixel trigger treshold)
+std::cin >> response;
+std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+std::cout << std::endl;
 
+if(response){
 
+	std::cout << "Enter value to subtract" << std::endl;
+	std::cin >> offset;
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	std::cout << std::endl;
 
+}
 
 
 
@@ -318,6 +334,7 @@ std::cin >> exp_time;
 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 std::cout << std::endl;
 
+exp_time = exp_time*1000;
 except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, exp_time , ASI_FALSE); //Set exposure time to the camera (redundant but could be needed)
 
 
@@ -345,31 +362,31 @@ setstream.close();
 
 
 
-int threshold = 0;
 
 
 
 
 
+ASI_EXPOSURE_STATUS status;
 for(i = 0; i < shutters; i++){
 	unsigned char * image = new unsigned char[buffer_size](); //Declare image buffer
 	isin = 1;
-	
-	ASIStartExposure(info.CameraID, ASI_FALSE); //Start exposure
-	ASI_EXPOSURE_STATUS status;
-	auto start = std::chrono::steady_clock::now(); //start timer
-	while(isin){
-		auto wtis = std::chrono::steady_clock::now() - start;
-		int dur = std::chrono::duration_cast<std::chrono::milliseconds>(wtis).count(); //calculate time elapsed
-
-
+	ASIStartExposure(info.CameraID, ASI_FALSE);
+	usleep(10000);
+    status = ASI_EXP_WORKING;
+	while(status == ASI_EXP_WORKING){
 		ASIGetExpStatus(info.CameraID, &status); //Run timer and get exposure status
-		
-		if(dur > exp_time){isin = 0;} //If time elapsed > exposure time kill acquisition
 	}
+
+
+	if(status == ASI_EXP_SUCCESS){ASIGetDataAfterExp(info.CameraID, image, buffer_size); //If exposure status is not error save image
+	}
+
+
 
 	if(status){ASIGetDataAfterExp(info.CameraID, image, buffer_size); //If exposure status is not error save image
 	}
+
     std::stringstream ss;
     ss << "./output/active_pixels_tresh_" << threshold << "_image_" << i << ".txt";
 
@@ -387,11 +404,8 @@ for(i = 0; i < shutters; i++){
             
             b += 1;
         }
-
-
-        if(image[j] > threshold){
-
-            stream << (int)image[j] << "\t" << j << "\t" << b << std::endl;
+        if(((int)image[j] - offset) > threshold){
+            stream << ((int)image[j] - offset) << "\t" << ((j+1)%NativeResX) << "\t" << b << std::endl;
 
         }
 	}

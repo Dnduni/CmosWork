@@ -7,6 +7,7 @@
 #include <limits>
 #include <thread>
 #include <chrono>
+#include <unistd.h>
 
 #define wait_time 500 //Minimum time in ms between consecutive acquisitions
 
@@ -142,7 +143,7 @@ int main(){
 					break;
 				
 				case 1:
-					except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, value, AutoAdjust);
+					except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, value*1000, AutoAdjust);
 
 					//Checks if there were errors setting the value
 					ASIGetControlValue(info.CameraID, ASI_EXPOSURE, &check, &isTrue);
@@ -281,9 +282,22 @@ int main(){
 //Write relevant settings to file
 
 
+//Ask for dark subtraction
+response = 0;
+int offset = 0;
+std::cout << "Apply dark offset? (0/1)" << std::endl; //Asks to change camera mode (pixel trigger treshold)
+std::cin >> response;
+std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+std::cout << std::endl;
 
+if(response){
 
+	std::cout << "Enter value to subtract" << std::endl;
+	std::cin >> offset;
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	std::cout << std::endl;
 
+}
 
 
 
@@ -318,6 +332,7 @@ std::cin >> exp_time;
 std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 std::cout << std::endl;
 
+exp_time = exp_time*1000;
 except = ASISetControlValue(info.CameraID, ASI_EXPOSURE, exp_time , ASI_FALSE); //Set exposure time to the camera (redundant but could be needed)
 
 
@@ -354,18 +369,14 @@ for(i = 0; i < shutters; i++){
 	
 	ASIStartExposure(info.CameraID, ASI_FALSE); //Start exposure
 	ASI_EXPOSURE_STATUS status;
-	auto start = std::chrono::steady_clock::now(); //start timer
-	while(isin){
-		auto wtis = std::chrono::steady_clock::now() - start;
-		int dur = std::chrono::duration_cast<std::chrono::milliseconds>(wtis).count(); //calculate time elapsed
-
-
+	usleep(10000);
+    status = ASI_EXP_WORKING;
+	while(status == ASI_EXP_WORKING){
 		ASIGetExpStatus(info.CameraID, &status); //Run timer and get exposure status
-		
-		if(dur > exp_time){isin = 0;} //If time elapsed > exposure time kill acquisition
 	}
 
-	if(status){ASIGetDataAfterExp(info.CameraID, image, buffer_size); //If exposure status is not error save image
+
+	if(status == ASI_EXP_SUCCESS){ASIGetDataAfterExp(info.CameraID, image, buffer_size); //If exposure status is not error save image
 	}
 
 	std::stringstream ss;
@@ -393,7 +404,7 @@ for(i = 0; i < shutters; i++){
 		}
 	int j;
 	for(j = 0; j < buffer_size ; j++){
-		stream << (int)image[j];
+		stream << ((int)image[j] - offset);
 		stream << ' ';
 		if((j+1)%NativeResX == 0){		//Write to file txt according to resolution set
 			stream << std::endl;

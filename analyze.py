@@ -6,8 +6,8 @@ from tqdm import tqdm
 #Define relevant arrays and constants
 means = []
 ev_num = []
-treshold = 160
-
+treshold = 200
+file_num = 100
 #Set directories up for analysis to keep everything tidy
 
 Path("./eventi").mkdir(parents = True, exist_ok= True)
@@ -16,7 +16,7 @@ Path("./eventi/event_logs").mkdir(parents = True, exist_ok = True)
 
 
 #load files
-for i in tqdm(range(2000)):
+for i in tqdm(range(file_num)):
     if i < 10:
         data = np.loadtxt("image0000" + str(i) + ".txt")
     elif i >= 10 and i < 100:
@@ -47,9 +47,6 @@ for i in tqdm(range(2000)):
         j = 0
         #heatmap each element and add it to the detected events file for that image
         for element in events:
-            plt.matshow(element)
-            plt.savefig("./eventi/images/event" + str(j) + "image" + str(i) + ".png")
-            plt.close()
             with open("./eventi/event_logs/events_image" + str(i) + ".txt", 'a') as eve:
                 eve.write("Event number:" + str(j) + "\n")
                 eve.write(str(element) + "\n")
