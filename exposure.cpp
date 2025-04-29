@@ -179,6 +179,15 @@ int main(){
 
 	}
 
+	//Get camera mode
+
+	ASI_CAMERA_MODE mode;
+
+
+
+
+
+
 	//Set Resolution
 
 	int NativeResX = 0;
