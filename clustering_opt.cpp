@@ -8,7 +8,7 @@
 
 #define MAX_ROW 3008
 #define MAX_COL 3008
-#define CUTOFF 0
+#define SEED_CENTER_CUTOFF 4
 #define CLUSTER_EDGE 3
 #define BAD_THR 1     // Valore sopra il quale è bad una volta
 #define BAD_THR_REP 4 // Se è bad piu volte di cosi allora è bad
@@ -93,55 +93,61 @@ int main()
         }
     }
 
-    std::vector<SeedCandidate> candidates;
+    std::vector<SeedCandidate> seed_candidates;
 #pragma omp parallel
     {
         std::vector<SeedCandidate> local_candidates;
-        std::vector<SeedCandidate> cluster;
+        std::vector<SeedCandidate> clusters;
         std::vector<int> cluster_vals;
 #pragma omp for
-        for (int f = 0; f < n_file; ++f)
+        for (int this_file_number = 0; this_file_number < n_file; ++this_file_number)
         {
-            std::cout << "Processing frame: " << f << std::endl;
-            std::vector<std::vector<int>> V(n_row, std::vector<int>(n_col));
-            std::ifstream data(datafiles[f]);
-            for (int i = 0; i < n_row; ++i)
-                for (int j = 0; j < n_col; ++j)
+            std::cout << "Processing frame: " << this_file_number << std::endl;
+            std::vector<std::vector<int>> this_file_values(n_row, std::vector<int>(n_col));
+            std::ifstream data(datafiles[this_file_number]);
+            for (int this_row = 0; this_row < n_row; ++this_row)
+                for (int this_col = 0; this_col < n_col; ++this_col)
                 {
-                    data >> V[i][j];
-                    if (is_bad[i][j] || V[i][j] > 254)
-                        V[i][j] = 0;
+                    data >> this_file_values[this_row][this_col]; // Appoggio in this_file_values tutti i valori di questo frame
+                    if (is_bad[this_row][this_col] || this_file_values[this_row][this_col] > 254)
+                    {
+                        this_file_values[this_row][this_col] = 0; // Se questo pixel era segnato come Bad, o se ha un numero insensato, ci metto 0
+                    }
                 }
             data.close();
 
-            for (int i = CLUSTER_EDGE; i < n_row - CLUSTER_EDGE; ++i)
+            // Arrivato qui, per questo frame/file, ho salvato in this_file_values tutti i pixel che non sono Bad o insensati
+            //  Ora cerco i cluster, scorrendo di nuovo tutte le righe e le colonne (edge escluso)
+
+            for (int this_row = CLUSTER_EDGE; this_row < n_row - CLUSTER_EDGE; ++this_row)
             {
-                for (int j = CLUSTER_EDGE; j < n_col - CLUSTER_EDGE; ++j)
+                for (int this_col = CLUSTER_EDGE; this_col < n_col - CLUSTER_EDGE; ++this_col)
                 {
-                    if (V[i][j] > CUTOFF)
+                    if (this_file_values[this_row][this_col] >= SEED_CENTER_CUTOFF) // Quando trovo un pixel sopra SEED_CENTER_CUTOFF
                     {
-                        SeedCandidate seed{i, j, V[i][j], f};
+                        SeedCandidate this_seed{this_row, this_col, this_file_values[this_row][this_col], this_file_number}; // Creo un oggetto SeedCandidate
                         while (true)
                         {
-                            cluster.resize(0);
-                            for (int k = seed.x - CLUSTER_EDGE; k <= seed.x + CLUSTER_EDGE; ++k)
-                                for (int l = seed.y - CLUSTER_EDGE; l <= seed.y + CLUSTER_EDGE; ++l)
-                                    if (k > 0 && k < n_row && l > 0 && l < n_col)
+                            clusters.resize(0); // Svuota la lista di clusters
+                            for (int pixel_x = this_seed.x - CLUSTER_EDGE; pixel_x <= this_seed.x + CLUSTER_EDGE; ++pixel_x)
+                                for (int pixel_y = this_seed.y - CLUSTER_EDGE; pixel_y <= this_seed.y + CLUSTER_EDGE; ++pixel_y)
+                                    if (pixel_x > 0 && pixel_x < n_row && pixel_y > 0 && pixel_y < n_col) // Check di sicurezza
                                     {
 #pragma omp critical
-                                        cluster.push_back({k, l, V[k][l], f});
+                                        clusters.push_back({pixel_x, pixel_y, this_file_values[pixel_x][pixel_y], this_file_number});
+                                        // Aggiunge alla lista dei clusters di questo frame un nuovo SeedCandidate
                                     }
-                            int index = find_maximum(cluster);
+                            int index = find_maximum(clusters);
                             if (index == -1)
                                 break;
 
-                            const SeedCandidate &max_pixel = cluster[index];
-                            if ((max_pixel.x != seed.x || max_pixel.y != seed.y) && max_pixel.val > seed.val)
+                            const SeedCandidate &max_pixel = clusters[index];
+                            if ((max_pixel.x != this_seed.x || max_pixel.y != this_seed.y) && max_pixel.val > this_seed.val)
                             {
-                                seed = max_pixel;
+                                this_seed = max_pixel;
                                 continue;
                             }
-                            else if ((max_pixel.x != seed.x || max_pixel.y != seed.y) && max_pixel.val < seed.val)
+                            else if ((max_pixel.x != this_seed.x || max_pixel.y != this_seed.y) && max_pixel.val < this_seed.val)
                             {
                                 break; // Inconsistent max
                             }
@@ -149,14 +155,14 @@ int main()
                             {
                                 bool found = false;
                                 for (const auto &c : local_candidates)
-                                    if (nearby_max(seed, c))
+                                    if (nearby_max(this_seed, c))
                                     {
                                         found = true;
                                         break;
                                     }
                                 if (!found)
 #pragma omp critical
-                                    local_candidates.push_back(seed);
+                                    local_candidates.push_back(this_seed);
                                 break;
                             }
                         }
@@ -165,11 +171,11 @@ int main()
             }
         }
 #pragma omp critical
-        candidates.insert(candidates.end(), local_candidates.begin(), local_candidates.end());
+        seed_candidates.insert(seed_candidates.end(), local_candidates.begin(), local_candidates.end());
     }
 
     std::ofstream clusterfile("clusters.txt");
-    for (const auto &c : candidates)
+    for (const auto &c : seed_candidates)
         clusterfile << c.x << "\t" << c.y << "\t" << c.val << "\t" << c.frame << "\n";
     clusterfile.close();
 
