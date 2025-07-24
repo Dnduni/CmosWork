@@ -183,5 +183,21 @@ int main()
     clusterfile.close();
 
     std::cout << "Clustering complete. Output written to clusters.txt\n";
+
+    std::ofstream badPixelFile("bad_pixels.txt"); // Scrivo su file di output txt la lista dei bad pixel
+    int bad_pixel_counter = 0;
+    for (int this_row = 0; this_row < n_row; ++this_row)
+    {
+        for (int this_col = 0; this_col < n_col; ++this_col)
+        {
+            if (is_bad[this_row][this_col])
+            {
+                badPixelFile << bad_pixel_counter << "\t" << this_row << "\t" << this_col << "\t" << badmask[this_row][this_col] << "\n";
+                bad_pixel_counter++;
+            }
+        }
+    }
+    badPixelFile.close();
+
     return 0;
 }
