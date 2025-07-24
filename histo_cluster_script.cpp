@@ -17,7 +17,7 @@
 using namespace std;
 #define max_row  3008
 #define max_col  3008
-#define max_frames 1000
+#define max_frames 100
 
 struct pixel{
     int x;
@@ -34,7 +34,7 @@ vector<pixel> centers;
 std::ifstream clusterfile;
 pixel seed;
 int count = 0;
-clusterfile.open("clusters_cap.txt");
+clusterfile.open("clustersdark.txt");
 std::cout << "Reading cluster file" << std::endl;
 int a,b,c,d;
 TH1F *  seedhisto = new TH1F("seed", "seed", 200 , 0 ,255); //Histogram of seed value
@@ -53,13 +53,13 @@ int i,j,frameind;
 int cluster_sum;
 int number;
 std::vector<std::vector<int>> V(max_row, std::vector<int>(max_col, 0));
-int edge3 = 3;
-int edge5 = 5;
-int edge7 = 7;
+int edge3 = 1;
+int edge5 = 2;
+int edge7 = 3;
 a,b,c,d = 0;
-TH1F * histo3 = new TH1F("3x3 cluster value", "3x3 cluster value", 500, 0 , 500);
-TH1F * histo5 = new TH1F("5x5 cluster value", "5x5 cluster value", 500, 0 , 500);
-TH1F * histo7 = new TH1F("7x7 cluster value", "7x7 cluster value", 500, 0 , 500);
+TH1F * histo3 = new TH1F("3x3 cluster value", "3x3 cluster value", 500, 0 , 200);
+TH1F * histo5 = new TH1F("5x5 cluster value", "5x5 cluster value", 500, 0 , 200);
+TH1F * histo7 = new TH1F("7x7 cluster value", "7x7 cluster value", 500, 0 , 200);
 int sum3,sum5,sum7;
 #pragma omp parallel
 {
@@ -73,21 +73,21 @@ for(frameind = 0; frameind < max_frames; frameind++){
     
     
     if(number < 10){
-        path << "2025_05_21_Na22_capped_gain_200_1s/image0000" << number << ".txt";
+        path << "2025_05_21_dark_1s_gain_200/image0000" << number << ".txt";
         string_path = path.str();
         clusterfile.open(string_path);
         path.str("");
     }
 
     if(number >= 10 && number < 100){
-        path << "2025_05_21_Na22_capped_gain_200_1s/image000" << number << ".txt";
+        path << "2025_05_21_dark_1s_gain_200/image000" << number << ".txt";
         string_path = path.str();
         clusterfile.open(string_path);
         path.str("");
     }
 
     if(number >= 100 && number < 1000 ){
-        path << "2025_05_21_Na22_capped_gain_200_1s/image00" << number << ".txt";
+        path << "2025_05_21_dark_1s_gain_200/image00" << number << ".txt";
         string_path = path.str();
         clusterfile.open(string_path);
         path.str("");
@@ -95,7 +95,7 @@ for(frameind = 0; frameind < max_frames; frameind++){
 
 
     if(number >= 1000){
-        path << "2025_05_21_Na22_capped_gain_200_1s/image0" << number << ".txt";
+        path << "2025_05_21_dark_1s_gain_200/image0" << number << ".txt";
         string_path = path.str();
         clusterfile.open(string_path);
         path.str("");

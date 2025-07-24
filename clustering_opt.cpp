@@ -8,8 +8,8 @@
 
 #define MAX_ROW 3008
 #define MAX_COL 3008
-#define CUTOFF 6
-#define CLUSTER_EDGE 7
+#define CUTOFF 0
+#define CLUSTER_EDGE 3
 
 struct Candidate {
     int x, y, val, frame;
