@@ -10,13 +10,16 @@
 #define MAX_COL 3008
 #define CUTOFF 0
 #define CLUSTER_EDGE 3
+#define BAD_THR 1     // Valore sopra il quale è bad una volta
+#define BAD_THR_REP 4 // Se è bad piu volte di cosi allora è bad
+#define N_FILES_FOR_BAD 10
 
-struct Candidate
+struct SeedCandidate
 {
     int x, y, val, frame;
 };
 
-int find_maximum(const std::vector<Candidate> &valarray)
+int find_maximum(const std::vector<SeedCandidate> &valarray)
 {
     int max_val = 0;
     int index = -1;
@@ -31,7 +34,7 @@ int find_maximum(const std::vector<Candidate> &valarray)
     return index;
 }
 
-bool nearby_max(const Candidate &a, const Candidate &b)
+bool nearby_max(const SeedCandidate &a, const SeedCandidate &b)
 {
     return (a.x >= b.x - CLUSTER_EDGE && a.x <= b.x + CLUSTER_EDGE &&
             a.y >= b.y - CLUSTER_EDGE && a.y <= b.y + CLUSTER_EDGE &&
@@ -61,31 +64,40 @@ int main()
     std::vector<std::vector<int>> badmask(n_row, std::vector<int>(n_col, 0));
     std::vector<std::vector<bool>> is_bad(n_row, std::vector<bool>(n_col, false));
 
-    // Determine bad pixels
-    for (int f = 0; f < 11 && f < n_file; ++f)
+    // Determine bad pixels: loop on first N_FILES_FOR_BAD files and look for pixels counting >= BAD_THR, incrementing in this case the corresponding value in badmask
+    for (int this_file = 0; this_file <= N_FILES_FOR_BAD && this_file < n_file; ++this_file)
     {
-        std::ifstream data(datafiles[f]);
-        for (int i = 0; i < n_row; ++i)
-            for (int j = 0; j < n_col; ++j)
+        std::ifstream data(datafiles[this_file]);
+        for (int this_row = 0; this_row < n_row; ++this_row)
+            for (int this_col = 0; this_col < n_col; ++this_col)
             {
                 int value;
                 data >> value;
-                if (value > 2)
-                    badmask[i][j]++;
+                if (value >= BAD_THR)
+                {
+                    badmask[this_row][this_col]++;
+                }
             }
         data.close();
     }
 
-    for (int i = 0; i < n_row; ++i)
-        for (int j = 0; j < n_col; ++j)
-            if (badmask[i][j] > 5)
-                is_bad[i][j] = true;
+    // Now loop on this badmask: if a pixel was above BAD_THR at least BAD_THR_REP times, call it bad, and write so in is_bad
+    for (int this_row = 0; this_row < n_row; ++this_row)
+    {
+        for (int this_col = 0; this_col < n_col; ++this_col)
+        {
+            if (badmask[this_row][this_col] >= BAD_THR_REP)
+            {
+                is_bad[this_row][this_col] = true;
+            }
+        }
+    }
 
-    std::vector<Candidate> candidates;
+    std::vector<SeedCandidate> candidates;
 #pragma omp parallel
     {
-        std::vector<Candidate> local_candidates;
-        std::vector<Candidate> cluster;
+        std::vector<SeedCandidate> local_candidates;
+        std::vector<SeedCandidate> cluster;
         std::vector<int> cluster_vals;
 #pragma omp for
         for (int f = 0; f < n_file; ++f)
@@ -108,7 +120,7 @@ int main()
                 {
                     if (V[i][j] > CUTOFF)
                     {
-                        Candidate seed{i, j, V[i][j], f};
+                        SeedCandidate seed{i, j, V[i][j], f};
                         while (true)
                         {
                             cluster.resize(0);
@@ -123,7 +135,7 @@ int main()
                             if (index == -1)
                                 break;
 
-                            const Candidate &max_pixel = cluster[index];
+                            const SeedCandidate &max_pixel = cluster[index];
                             if ((max_pixel.x != seed.x || max_pixel.y != seed.y) && max_pixel.val > seed.val)
                             {
                                 seed = max_pixel;
