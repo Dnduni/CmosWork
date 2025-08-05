@@ -1,3 +1,5 @@
 /output/*
 *.x
 *.txt
+.DS_Store
+clustering_opt
