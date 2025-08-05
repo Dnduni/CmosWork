@@ -17,7 +17,7 @@
 //  #define BAD_THR_REP 4 // Se è bad piu volte di cosi allora è bad
 //  #define N_FILES_FOR_BAD 10
 
-struct SeedCandidate
+struct SeedCandidate // TODO: In realtà poi è usato anche come oggetto per il singolo pixel, giusto?
 {
     int x, y, val, frame_number;
 };
@@ -194,8 +194,8 @@ int main(int argc, char *argv[])
     std::vector<SeedCandidate> seed_candidates; // Create the list of seed_candidates to be found
 #pragma omp parallel
     {
-        std::vector<SeedCandidate> local_candidates;
-        std::vector<SeedCandidate> this_seed_cluster;
+        std::vector<SeedCandidate> local_candidates;  // Local in the sense of "of this thread"
+        std::vector<SeedCandidate> this_seed_cluster; // TODO: Questo nome secondo me fa un po' confusione, dovrebbe essere tipo `this_seed_cluster_pixels`?
         std::vector<int> cluster_vals;
 #pragma omp for
         for (int this_frame_number = 0; this_frame_number < n_frames; ++this_frame_number)
@@ -226,61 +226,62 @@ int main(int argc, char *argv[])
             {
                 for (int this_col = cluster_edge; this_col < n_col - cluster_edge; ++this_col)
                 {
-                    if (this_frame_values[this_row][this_col] >= seed_center_cutoff) // Quando trovo un pixel sopra SEED_CENTER_CUTOFF
+                    if (this_frame_values[this_row][this_col] >= seed_center_cutoff) // When i find a pixel which value is at least seed_center_cutoff
                     {
-                        SeedCandidate this_seed{this_row, this_col, this_frame_values[this_row][this_col], this_frame_number}; // Creo un oggetto SeedCandidate
+                        SeedCandidate this_seed_candidate{this_row, this_col, this_frame_values[this_row][this_col], this_frame_number}; // Create a SeedCandidate object
                         while (true)
                         {
-                            this_seed_cluster.resize(0); // Svuota la lista di clusters di questo seed
-                            // Scorro tutti i pixel attorno al possibile seed, calcolando il valore totale del cluster
-                            for (int pixel_x = this_seed.x - cluster_edge; pixel_x <= this_seed.x + cluster_edge; ++pixel_x)
-                                for (int pixel_y = this_seed.y - cluster_edge; pixel_y <= this_seed.y + cluster_edge; ++pixel_y)
+                            this_seed_cluster.resize(0); // Empty the list of clusters of this seed
+
+                            // Loop on all pixels around the seed candidate, adding to this_seed_cluster all pixels values
+                            for (int pixel_x = this_seed_candidate.x - cluster_edge; pixel_x <= this_seed_candidate.x + cluster_edge; ++pixel_x)
+                                for (int pixel_y = this_seed_candidate.y - cluster_edge; pixel_y <= this_seed_candidate.y + cluster_edge; ++pixel_y)
                                     if (pixel_x > 0 && pixel_x < n_row && pixel_y > 0 && pixel_y < n_col) // Check di sicurezza
                                     {
 #pragma omp critical
                                         this_seed_cluster.push_back({pixel_x, pixel_y, this_frame_values[pixel_x][pixel_y], this_frame_number});
-                                        // Aggiunge al cluster di questo frame un nuovo oggetto SeedCandidate (qui usato per il singolo pixel)
                                     }
+                            // At this stage, for this_seed_candidate, we addedd to this_seed_cluster all its sorrounding pixels values
 
-                            // Trovo all'interno del cluster il pixel più alto
+                            // Find the highes pixel value in the cluster
                             int max_pixel_index = find_maximum(this_seed_cluster);
                             if (max_pixel_index == -1)
-                                break;
+                                break; // Something went wrong, proceed to look for next SeedCandidate
 
-                            const SeedCandidate &max_pixel = this_seed_cluster[max_pixel_index]; // Salvo (senza copiare) come SeedCandidate il pixel di maggiore valore
-                            if ((max_pixel.x != this_seed.x || max_pixel.y != this_seed.y) && max_pixel.val > this_seed.val)
+                            const SeedCandidate &max_pixel = this_seed_cluster[max_pixel_index]; // Store (w/o copying) as SeedCandidate the highest pixel
+                            if ((max_pixel.x != this_seed_candidate.x || max_pixel.y != this_seed_candidate.y) && max_pixel.val > this_seed_candidate.val)
                             {
-                                this_seed = max_pixel; // Se non era quello da cui ero partito il pixel più alto, lo rimpiazzo con quello più alto
+                                this_seed_candidate = max_pixel; // If the highest pixel is not the original SeedCandidate, replace the seed candidate with the highest one
                                 continue;
                             }
-                            else if ((max_pixel.x != this_seed.x || max_pixel.y != this_seed.y) && max_pixel.val < this_seed.val)
+                            else if ((max_pixel.x != this_seed_candidate.x || max_pixel.y != this_seed_candidate.y) && max_pixel.val < this_seed_candidate.val)
                             {
                                 break; // Inconsistent max
                             }
                             else
-                            { // Qui ci entro solo se avevo subito beccato il pixel più alto del cluster
+                            { // Enter here only if the original this_seed_candidate was already the highest pixel
                                 bool found = false;
-                                for (const auto &other_seed_candidate : local_candidates) // Scorro tutti i candidati seed già visti
-                                    if (nearby_max(this_seed, other_seed_candidate))      // Se questo altro candidato seed è nello stesso frame, con il centro dentro il cluster del vecchio e valore minore... cioè se è compreso in quello vecchio, allora segno che l'avevo già trovato
+                                for (const auto &other_seed_candidate : local_candidates)      // Loop on all other possible SeedCandidates we already saw
+                                    if (nearby_max(this_seed_candidate, other_seed_candidate)) // Se questo altro candidato seed è nello stesso frame, con il centro dentro il cluster del vecchio e valore minore... cioè se è compreso in quello vecchio, allora segno che l'avevo già trovato
                                     {
                                         found = true;
                                         break;
                                     }
-                                if (!found) // Se non lo avevo già trovato
+                                if (!found) // If we did not already found this seed ...
 #pragma omp critical
-                                    local_candidates.push_back(this_seed); // ... lo aggiungo alla lista dei candidati seed
+                                    local_candidates.push_back(this_seed_candidate); // ... add it to the list of local_candidates
                                 break;
                             }
                         }
                     }
                 }
             }
-        } // Chiude il ciclo su tutti i files/frames
+        } // Close the loop on all frames
 #pragma omp critical
-        seed_candidates.insert(seed_candidates.end(), local_candidates.begin(), local_candidates.end()); // aggiungo in fondo a seed_candidates i candidati locali (cioè di questo thread)
+        seed_candidates.insert(seed_candidates.end(), local_candidates.begin(), local_candidates.end()); // Add at the end of seeed_candidates these local_candidates (i.e. candidates of this thread)
     }
 
-    std::ofstream clusterfile(output_file); // Scrivo su file di output txt la lista dei seed
+    std::ofstream clusterfile(output_file); // Write on output file the list of seed candidates
     for (const auto &this_seed : seed_candidates)
         clusterfile << this_seed.x << "\t" << this_seed.y << "\t" << this_seed.val << "\t" << this_seed.frame_number << "\n";
     clusterfile.close();
@@ -299,7 +300,7 @@ int main(int argc, char *argv[])
         bad_pixel_filename = output_file + "_bad";
     }
 
-    std::ofstream badPixelFile(bad_pixel_filename); // Scrivo su file di output txt la lista dei bad pixel
+    std::ofstream badPixelFile(bad_pixel_filename); // Write on bad_output file the list of bad pixels
     int bad_pixel_counter = 0;
     for (int this_row = 0; this_row < n_row; ++this_row)
     {
