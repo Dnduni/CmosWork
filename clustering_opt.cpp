@@ -31,7 +31,7 @@ int n_row = 3008;
 int n_col = 3008;
 int n_files = 1000;
 std::string input_file = "";
-std::string output_file = "";
+std::string output_file = "output.txt";
 
 int find_maximum(const std::vector<SeedCandidate> &valarray)
 {
