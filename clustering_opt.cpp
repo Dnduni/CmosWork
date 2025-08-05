@@ -25,7 +25,7 @@ struct SeedCandidate
 int cluster_edge = 3;
 int seed_center_cutoff = 3;
 int bad_thr = 1;
-int bad_thr_rep = 5;
+int bad_thr_rep = 5; // TODO: Attenti che questo chiaramente è parente di n_frames_for_bad ...
 int n_frames_for_bad = 10;
 int n_row = 3008;
 int n_col = 3008;
@@ -149,24 +149,29 @@ int main(int argc, char *argv[])
     std::vector<std::vector<int>> badmask(n_row, std::vector<int>(n_col, 0));
     std::vector<std::vector<bool>> is_bad(n_row, std::vector<bool>(n_col, false));
 
-    // Determine bad pixels: loop on first n_frames_for_bad files and look for pixels counting >= BAD_THR, incrementing in this case the corresponding value in badmask
-    for (int this_file = 0; this_file <= n_frames_for_bad && this_file < n_frames; ++this_file)
+    // ################ LOOK FOR BAD PIXELS
+    // ########
+
+    // Determine bad pixels: loop on first n_frames_for_bad frames and look for pixels counting >= bad_thr, incrementing in this case the corresponding value in badmask
+    for (int this_frame_number = 0; this_frame_number <= n_frames_for_bad && this_frame_number < n_frames; ++this_frame_number) // TODO: Pescarne N a caso, non i primi
     {
-        std::ifstream data(datafiles[this_file]);
+        std::ifstream this_frame(datafiles[this_frame_number]); // Read the frame
         for (int this_row = 0; this_row < n_row; ++this_row)
             for (int this_col = 0; this_col < n_col; ++this_col)
             {
                 int value;
-                data >> value;
+                this_frame >> value; // If this pixel value is above bad_thr, increment its mask value
                 if (value >= bad_thr)
                 {
                     badmask[this_row][this_col]++;
                 }
             }
-        data.close();
+        this_frame.close();
     }
 
-    // Now loop on this badmask: if a pixel was above BAD_THR at least BAD_THR_REP times, call it bad, and write so in is_bad
+    // At this stage, we populated badmask, i.e. a frame-like object in which each pixel has as value the number of times it exceeded bad_thr
+
+    // Now loop on this badmask: if a pixel was above bad_thr at least bad_thr_rep times, call it bad, and write so in is_bad
     for (int this_row = 0; this_row < n_row; ++this_row)
     {
         for (int this_col = 0; this_col < n_col; ++this_col)
@@ -178,7 +183,12 @@ int main(int argc, char *argv[])
         }
     }
 
-    std::vector<SeedCandidate> seed_candidates;
+    // At this stage, we populated is_bad, i.e. a frame-like object in which each pixel which exceeded bad_thr at least bad_thr_rep is marked as true and thus bad pixel
+
+    // ########
+    // ################
+
+    std::vector<SeedCandidate> seed_candidates; // Create the list of seed_candidates to be found
 #pragma omp parallel
     {
         std::vector<SeedCandidate> local_candidates;
