@@ -122,8 +122,8 @@ int main(int argc, char *argv[])
               << "  SEED_CENTER_CUTOFF  = " << seed_center_cutoff << "\n"
               << "  BAD_THR             = " << bad_thr << "\n"
               << "  BAD_THR_REP         = " << bad_thr_rep << "\n"
-              << "  N_FILES_FOR_BAD     = " << n_frames_for_bad << "\n"
-              << "  N_FILES     = " << n_frames << "\n"
+              << "  n_frames_for_bad     = " << n_frames_for_bad << "\n"
+              << "  n_frames     = " << n_frames << "\n"
               << "  input_file          = \"" << input_file << "\"\n"
               << "  output_file         = \"" << output_file << "\"\n";
 
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
     std::vector<std::vector<int>> badmask(n_row, std::vector<int>(n_col, 0));
     std::vector<std::vector<bool>> is_bad(n_row, std::vector<bool>(n_col, false));
 
-    // Determine bad pixels: loop on first N_FILES_FOR_BAD files and look for pixels counting >= BAD_THR, incrementing in this case the corresponding value in badmask
+    // Determine bad pixels: loop on first n_frames_for_bad files and look for pixels counting >= BAD_THR, incrementing in this case the corresponding value in badmask
     for (int this_file = 0; this_file <= n_frames_for_bad && this_file < n_frames; ++this_file)
     {
         std::ifstream data(datafiles[this_file]);
