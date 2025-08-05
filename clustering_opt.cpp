@@ -26,10 +26,10 @@ int cluster_edge = 3;
 int seed_center_cutoff = 3;
 int bad_thr = 1;
 int bad_thr_rep = 5;
-int n_files_for_bad = 10;
+int n_frames_for_bad = 10;
 int n_row = 3008;
 int n_col = 3008;
-int n_files = 1000;
+int n_frames = 1000;
 std::string input_file = "";
 std::string output_file = "output.txt";
 
@@ -72,10 +72,10 @@ int main(int argc, char *argv[])
         {"seed_thr", required_argument, 0, 's'},
         {"bad_thr", required_argument, 0, 't'},
         {"bad_thr_rep", required_argument, 0, 'r'},
-        {"n_files_for_bad", required_argument, 0, 'b'},
+        {"n_frames_for_bad", required_argument, 0, 'b'},
         {"input_list", required_argument, 0, 'i'},
         {"output_file", required_argument, 0, 'o'},
-        {"n_files", required_argument, 0, 'n'},
+        {"n_frames", required_argument, 0, 'n'},
         {"help", no_argument, 0, 'h'},
         {0, 0, 0, 0}};
 
@@ -99,10 +99,10 @@ int main(int argc, char *argv[])
             bad_thr_rep = std::atoi(optarg);
             break;
         case 'b':
-            n_files_for_bad = std::atoi(optarg);
+            n_frames_for_bad = std::atoi(optarg);
             break;
         case 'n':
-            n_files = std::atoi(optarg);
+            n_frames = std::atoi(optarg);
             break;
         case 'i':
             input_file = optarg;
@@ -122,8 +122,8 @@ int main(int argc, char *argv[])
               << "  SEED_CENTER_CUTOFF  = " << seed_center_cutoff << "\n"
               << "  BAD_THR             = " << bad_thr << "\n"
               << "  BAD_THR_REP         = " << bad_thr_rep << "\n"
-              << "  N_FILES_FOR_BAD     = " << n_files_for_bad << "\n"
-              << "  N_FILES     = " << n_files << "\n"
+              << "  N_FILES_FOR_BAD     = " << n_frames_for_bad << "\n"
+              << "  N_FILES     = " << n_frames << "\n"
               << "  input_file          = \"" << input_file << "\"\n"
               << "  output_file         = \"" << output_file << "\"\n";
 
@@ -139,17 +139,18 @@ int main(int argc, char *argv[])
     // config_file >> n_file >> n_row >> n_col >> fileio >> fileout;
     // config_file.close();
 
-    std::vector<std::string> datafiles(n_files);
+    std::vector<std::string> datafiles(n_frames);
     std::ifstream file_list(input_file);
-    for (int i = 0; i < n_files; ++i)
+    for (int i = 0; i < n_frames; ++i)
         file_list >> datafiles[i];
     file_list.close();
+    // Now inside datafiles there are n_frames as string
 
     std::vector<std::vector<int>> badmask(n_row, std::vector<int>(n_col, 0));
     std::vector<std::vector<bool>> is_bad(n_row, std::vector<bool>(n_col, false));
 
     // Determine bad pixels: loop on first N_FILES_FOR_BAD files and look for pixels counting >= BAD_THR, incrementing in this case the corresponding value in badmask
-    for (int this_file = 0; this_file <= n_files_for_bad && this_file < n_files; ++this_file)
+    for (int this_file = 0; this_file <= n_frames_for_bad && this_file < n_frames; ++this_file)
     {
         std::ifstream data(datafiles[this_file]);
         for (int this_row = 0; this_row < n_row; ++this_row)
@@ -184,7 +185,7 @@ int main(int argc, char *argv[])
         std::vector<SeedCandidate> this_seed_cluster;
         std::vector<int> cluster_vals;
 #pragma omp for
-        for (int this_file_number = 0; this_file_number < n_files; ++this_file_number)
+        for (int this_file_number = 0; this_file_number < n_frames; ++this_file_number)
         {
             std::cout << "Processing frame: " << this_file_number << std::endl;
             std::vector<std::vector<int>> this_file_values(n_row, std::vector<int>(n_col));
