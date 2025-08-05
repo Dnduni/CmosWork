@@ -22,7 +22,7 @@ struct SeedCandidate // TODO: In realtà poi è usato anche come oggetto per il 
     int x, y, val, frame_number;
 };
 
-int cluster_edge = 3;       // Cluster size
+int cluster_edge = 3;       // Cluster (half) size
 int seed_center_cutoff = 3; // Pixel value above which a pixel can be a seed center
 int bad_thr = 1;            // To define a pixel as bad in a single frame
 int bad_thr_rep = 5;        // To define a pixel as bad if above bad_thr for at least these times // TODO: Attenti che questo chiaramente è parente di n_frames_for_bad ...
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
                         {
                             this_seed_cluster.resize(0); // Empty the list of clusters of this seed
 
-                            // Loop on all pixels around the seed candidate, adding to this_seed_cluster all pixels values
+                            // Loop on all pixels around the seed candidate, adding to this_seed_cluster all pixels (as SeedCandidate object to store also their position)
                             for (int pixel_x = this_seed_candidate.x - cluster_edge; pixel_x <= this_seed_candidate.x + cluster_edge; ++pixel_x)
                                 for (int pixel_y = this_seed_candidate.y - cluster_edge; pixel_y <= this_seed_candidate.y + cluster_edge; ++pixel_y)
                                     if (pixel_x > 0 && pixel_x < n_row && pixel_y > 0 && pixel_y < n_col) // Check di sicurezza
@@ -241,9 +241,9 @@ int main(int argc, char *argv[])
 #pragma omp critical
                                         this_seed_cluster.push_back({pixel_x, pixel_y, this_frame_values[pixel_x][pixel_y], this_frame_number});
                                     }
-                            // At this stage, for this_seed_candidate, we addedd to this_seed_cluster all its sorrounding pixels values
+                            // At this stage, for this_seed_candidate, we addedd to this_seed_cluster all its sorrounding pixels
 
-                            // Find the highes pixel value in the cluster
+                            // Find the highest pixel value in the cluster
                             int max_pixel_index = find_maximum(this_seed_cluster);
                             if (max_pixel_index == -1)
                                 break; // Something went wrong, proceed to look for next SeedCandidate
