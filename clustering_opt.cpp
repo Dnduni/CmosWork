@@ -22,11 +22,11 @@ struct SeedCandidate
     int x, y, val, frame_number;
 };
 
-int cluster_edge = 3;
-int seed_center_cutoff = 3;
-int bad_thr = 1;
-int bad_thr_rep = 5; // TODO: Attenti che questo chiaramente è parente di n_frames_for_bad ...
-int n_frames_for_bad = 10;
+int cluster_edge = 3;       // Cluster size
+int seed_center_cutoff = 3; // Pixel value above which a pixel can be a seed center
+int bad_thr = 1;            // To define a pixel as bad in a single frame
+int bad_thr_rep = 5;        // To define a pixel as bad if above bad_thr for at least these times // TODO: Attenti che questo chiaramente è parente di n_frames_for_bad ...
+int n_frames_for_bad = 10;  // Frames to anal for bad pixels
 int n_row = 3008;
 int n_col = 3008;
 int n_frames = 1000;
@@ -188,6 +188,9 @@ int main(int argc, char *argv[])
     // ########
     // ################
 
+    // ################ LOOK FOR SEEDS
+    // ########
+
     std::vector<SeedCandidate> seed_candidates; // Create the list of seed_candidates to be found
 #pragma omp parallel
     {
@@ -195,32 +198,37 @@ int main(int argc, char *argv[])
         std::vector<SeedCandidate> this_seed_cluster;
         std::vector<int> cluster_vals;
 #pragma omp for
-        for (int this_file_number = 0; this_file_number < n_frames; ++this_file_number)
+        for (int this_frame_number = 0; this_frame_number < n_frames; ++this_frame_number)
         {
-            std::cout << "Processing frame: " << this_file_number << std::endl;
-            std::vector<std::vector<int>> this_file_values(n_row, std::vector<int>(n_col));
-            std::ifstream data(datafiles[this_file_number]);
+
+            // Read all "good pixels" values
+            std::cout << "Processing frame: " << this_frame_number << " / " << n_frames << std::endl;
+            std::vector<std::vector<int>> this_frame_values(n_row, std::vector<int>(n_col)); // Matrix container to host all values of this frame
+            std::ifstream this_frame(datafiles[this_frame_number]);
             for (int this_row = 0; this_row < n_row; ++this_row)
+            {
                 for (int this_col = 0; this_col < n_col; ++this_col)
                 {
-                    data >> this_file_values[this_row][this_col]; // Appoggio in this_file_values tutti i valori di questo frame
-                    if (is_bad[this_row][this_col] || this_file_values[this_row][this_col] > 254)
+                    this_frame >> this_frame_values[this_row][this_col]; // Store in this_frame_values all values of this frame
+                    if (is_bad[this_row][this_col] || this_frame_values[this_row][this_col] > 254)
                     {
-                        this_file_values[this_row][this_col] = 0; // Se questo pixel era segnato come Bad, o se ha un numero insensato, ci metto 0
+                        this_frame_values[this_row][this_col] = 0; // If this pixel was marked as bad, or if it has a no sense value, put 0 //TODO: Sicuri non crei problemi/bias mettere a zero i bad pixel? da ragionare
                     }
                 }
-            data.close();
+            }
+            this_frame.close();
 
-            // Arrivato qui, per questo frame/file, ho salvato in this_file_values tutti i pixel che non sono Bad o insensati
-            // Ora cerco i seed, scorrendo di nuovo tutte le righe e le colonne (edge escluso)
+            // At this stage, for this frame we stored in this_frame_values all pixels that are not bad of no-sense
+
+            // Now proceed to look for seeds, with a new loop on rows and cols (except edge)
 
             for (int this_row = cluster_edge; this_row < n_row - cluster_edge; ++this_row)
             {
                 for (int this_col = cluster_edge; this_col < n_col - cluster_edge; ++this_col)
                 {
-                    if (this_file_values[this_row][this_col] >= seed_center_cutoff) // Quando trovo un pixel sopra SEED_CENTER_CUTOFF
+                    if (this_frame_values[this_row][this_col] >= seed_center_cutoff) // Quando trovo un pixel sopra SEED_CENTER_CUTOFF
                     {
-                        SeedCandidate this_seed{this_row, this_col, this_file_values[this_row][this_col], this_file_number}; // Creo un oggetto SeedCandidate
+                        SeedCandidate this_seed{this_row, this_col, this_frame_values[this_row][this_col], this_frame_number}; // Creo un oggetto SeedCandidate
                         while (true)
                         {
                             this_seed_cluster.resize(0); // Svuota la lista di clusters di questo seed
@@ -230,7 +238,7 @@ int main(int argc, char *argv[])
                                     if (pixel_x > 0 && pixel_x < n_row && pixel_y > 0 && pixel_y < n_col) // Check di sicurezza
                                     {
 #pragma omp critical
-                                        this_seed_cluster.push_back({pixel_x, pixel_y, this_file_values[pixel_x][pixel_y], this_file_number});
+                                        this_seed_cluster.push_back({pixel_x, pixel_y, this_frame_values[pixel_x][pixel_y], this_frame_number});
                                         // Aggiunge al cluster di questo frame un nuovo oggetto SeedCandidate (qui usato per il singolo pixel)
                                     }
 
